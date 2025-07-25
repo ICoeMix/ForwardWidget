@@ -1,58 +1,1088 @@
+// =============UserScript=============
+// @name         影视聚合查询组件
+// @version      1.3.0
+// @description  聚合查询豆瓣/TMDB/IMDB/BGM影视数据
+// @author       阿米诺斯
+// =============UserScript=============
 WidgetMetadata = {
   id: "forward.combined.media.lists",
   title: "影视榜单",
-  description: "豆瓣自定义片单",
-  author: "Joy",
-  site: "https://github.com/quantumultxx/FW-Widgets",
-  version: "1.0.6",
+  description: "聚合豆瓣、TMDB、IMDB和Bangumi的影视动画榜单",
+  author: "阿米诺斯",
+  site: "https://github.com/quantumultxx/ForwardWidgets",
+  version: "1.3.0",
   requiredVersion: "0.0.1",
   detailCacheDuration: 60,
   modules: [
-    // =============豆瓣模块=============    
+    // =============豆瓣模块=============
+    // --- 片单解析 ---
     {
       title: "豆瓣自定义片单",
-      description: "加载豆瓣官方榜单或用户豆列 (需输入 URL)",
+      description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch",
       requiresWebView: false,
-      functionName: "loadDoubanCardItems",
+      functionName: "loadEnhancedDoubanList",
       cacheDuration: 3600,
       params: [
         {
           name: "url", 
-          title: "🔗 列表地址", 
+          title: "🔗 片单地址", 
           type: "input", 
-          description: "输入豆瓣片单或榜单地址 (subject_collection 或 doulist)",
+          description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch",
           placeholders: [
-            { title: "一周电影口碑榜", 
-              value: "https://m.douban.com/subject_collection/movie_weekly_best" },
-            { title: "一周华语口碑剧集榜", 
-              value: "https://m.douban.com/subject_collection/tv_chinese_best_weekly" },
-            { title: "一周全球口碑剧集榜", 
-              value: "https://m.douban.com/subject_collection/tv_global_best_weekly" },
-            { title: "第97届奥斯卡 (2025)", 
-              value: "https://m.douban.com/subject_collection/EC7I7ZDRA?type=rank" }
+              { title: "一周电影口碑榜", 
+              value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_weekly_best/&dt_dapp=1" },
+              { title: "华语口碑剧集榜", 
+              value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/tv_chinese_best_weekly/&dt_dapp=1" },
+              { title: "全球口碑剧集榜", 
+              value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/tv_global_best_weekly/&dt_dapp=1" },
+              { title: "国内热播综艺", 
+              value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/show_domestic/&dt_dapp=1" },
+              { title: "国外热播综艺", 
+              value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/show_foreign/&dt_dapp=1" },
+              { title: "当地影院热映", 
+              value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_showing/&dt_dapp=1" },
+              { title: "热门动画", 
+              value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/tv_animation/&dt_dapp=1" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    // --- 实时热点 ---
+    {
+      title: "豆瓣电影实时热榜",
+      description: "来自豆瓣的当前热门电影榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanHotListWithTmdb",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", 
+          title: "🔗 列表地址", 
+          type: "constant", 
+          value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_real_time_hotest/&dt_dapp=1" },
+        { name: "type", 
+          title: "🎭 类型", 
+          type: "constant", 
+          value: "movie" }
+      ]
+    },
+    {
+      title: "豆瓣剧集实时热榜",
+      description: "来自豆瓣的当前热门剧集榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanHotListWithTmdb",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", 
+          title: "🔗 列表地址", 
+          type: "constant", 
+          value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/tv_real_time_hotest/&dt_dapp=1" },
+        { name: "type", 
+          title: "🎭 类型", 
+          type: "constant", 
+          value: "tv" }
+      ]
+    },
+    {
+      title: "豆瓣书影音实时热榜",
+      description: "来自豆瓣的书影音实时热榜",
+      requiresWebView: false,
+      functionName: "loadDoubanHotListWithTmdb",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", 
+          title: "🔗 列表地址", 
+          type: "constant", 
+          value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/subject_real_time_hotest/&dt_dapp=1" },
+        { name: "type", 
+          title: "🎭 类型", 
+          type: "constant", 
+          value: "subject" }
+      ]
+    },
+
+    // --- 精选榜单 ---
+    {
+      title: "豆瓣 Top 250 电影",
+      description: "豆瓣评分最高的 250 部电影",
+      requiresWebView: false,
+      functionName: "loadDoubanItemsFromApi",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", 
+          title: "🔗 列表地址", 
+          type: "constant", 
+          value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_top250/items" },
+        { name: "page", title: "页码", type: "page" },
+        { name: "limit", title: "🔢 每页数量", type: "constant", value: "20" }
+      ]
+    },
+    // --- 探索发现 ---
+    {
+      title: "豆瓣电影推荐",
+      description: "按分类、地区、类型标签浏览豆瓣推荐电影",
+      requiresWebView: false,
+      functionName: "loadDoubanRecommendMovies",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "category", 
+          title: "🏷️ 分类", 
+          type: "enumeration",
+          enumOptions: [ 
+            { title: "全部", value: "全部" }, 
+            { title: "热门电影", value: "热门" }, 
+            { title: "最新电影", value: "最新" }, 
+            { title: "豆瓣高分", value: "豆瓣高分" }, 
+            { title: "冷门佳片", value: "冷门佳片" } 
+          ],
+        },
+        {
+          name: "type", 
+          title: "🌍 地区", 
+          type: "enumeration",
+          value: "全部",
+          belongTo: {
+            paramName: "category",
+            value: ["热门","最新","豆瓣高分","冷门佳片"],
+          },
+          enumOptions: [ 
+            { title: "全部", value: "全部" }, 
+            { title: "华语", value: "华语" }, 
+            { title: "欧美", value: "欧美" }, 
+            { title: "韩国", value: "韩国" }, 
+            { title: "日本", value: "日本" } 
+          ],
+        },
+        {
+          name: "tags", 
+          title: "🎭 类型", 
+          type: "enumeration",
+          value: "",
+          belongTo: {
+            paramName: "category",
+            value: ["全部"],
+          },
+          enumOptions: [
+            { title: "全部", value: "" },
+            { title: "动作", value: "动作" },
+            { title: "科幻", value: "科幻" },
+            { title: "灾难", value: "灾难" },
+            { title: "爱情", value: "爱情" },
+            { title: "喜剧", value: "喜剧" },
+            { title: "悬疑", value: "悬疑" },
+            { title: "犯罪", value: "犯罪" },
+            { title: "冒险", value: "冒险" },
+            { title: "奇幻", value: "奇幻" },
+            { title: "战争", value: "战争" },
+            { title: "历史", value: "历史" },
+            { title: "武侠", value: "武侠" },
+            { title: "惊悚", value: "惊悚" },
+            { title: "恐怖", value: "恐怖" },
+            { title: "情色", value: "情色" },
+            { title: "动画", value: "动画" },
+            { title: "剧情", value: "剧情" },
+            { title: "西部", value: "西部" },
+            { title: "家庭", value: "家庭" },
+            { title: "音乐", value: "音乐" },
+            { title: "运动", value: "运动" },
+            { title: "古装", value: "古装" },
+            { title: "歌舞", value: "歌舞" },
+            { title: "传记", value: "传记" },
+            { title: "短片", value: "短片" },
+            { title: "纪录片", value: "纪录片" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
         { name: "limit", title: "🔢 每页数量", type: "constant", value: "20" }
       ]
     },
+    {
+      title: "豆瓣剧集推荐",
+      description: "按分类、类型浏览豆瓣推荐剧集",
+      requiresWebView: false,
+      functionName: "loadDoubanRecommendShows",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "type", 
+          title: "🎭 类型", 
+          type: "enumeration",
+          enumOptions: [
+            { title: "综合", value: "tv" }, 
+            { title: "国产剧", value: "tv_domestic" }, 
+            { title: "欧美剧", value: "tv_american" }, 
+            { title: "日剧", value: "tv_japanese" }, 
+            { title: "韩剧", value: "tv_korean" }, 
+            { title: "动画", value: "tv_animation" }, 
+            { title: "纪录片", value: "tv_documentary" } 
+          ],
+          value: "tv"
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "limit", title: "🔢 每页数量", type: "constant", value: "20" }
+      ]
+    },
+    // =============TMDB模块=============
+    // --- 当前与趋势模块 ---
+    {
+        title: "TMDB 正在热映",
+        description: "当前影院或流媒体上映的电影/剧集",
+        requiresWebView: false,
+        functionName: "tmdbNowPlaying",
+        cacheDuration: 3600,
+        params: [
+            { 
+                name: "type", 
+                title: "🎭类型", 
+                type: "enumeration", 
+                enumOptions: [
+                    { title: "电影", value: "movie" },
+                    { title: "剧集", value: "tv" }
+                ], 
+                value: "movie" 
+            },
+            { name: "page", title: "页码", type: "page" },
+            { name: "language", title: "语言", type: "language", value: "zh-CN" }
+        ]
+    },
+    {
+      title: "TMDB 今日热门",
+      description: "今日热门电影与剧集",
+      requiresWebView: false,
+      functionName: "loadTodayGlobalMedia",
+      cacheDuration: 60,
+      params: [
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    {
+      title: "TMDB 本周热门",
+      description: "本周热门电影与剧集",
+      requiresWebView: false,
+      functionName: "loadWeekGlobalMovies",
+      cacheDuration: 60,
+      params: [
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    // --- 常规发现模块 ---
+    {
+        title: "TMDB 高分内容",
+        description: "高分电影或剧集 (按用户评分排序)",
+        requiresWebView: false,
+        functionName: "tmdbTopRated",
+        cacheDuration: 3600,
+        params: [
+            { 
+                name: "type", 
+                title: "🎭类型", 
+                type: "enumeration", 
+                enumOptions: [
+                    { title: "电影", value: "movie" },
+                    { title: "剧集", value: "tv" }
+                ], 
+                value: "movie" 
+            },
+            { name: "language", title: "语言", type: "language", value: "zh-CN" },
+            { name: "page", title: "页码", type: "page" }
+        ]
+    },
+    // --- 平台筛选模块---
+    {
+        title: "TMDB 播出平台",
+        description: "按播出平台和内容类型筛选剧集内容",
+        requiresWebView: false,
+        functionName: "tmdbDiscoverByNetwork",
+        cacheDuration: 3600,
+        params: [
+            {
+                name: "with_networks",
+                title: "播出平台",
+                type: "enumeration",
+                description: "选择一个平台以查看其剧集内容",
+                value: "",
+                belongTo: {
+                  paramName: "air_status",
+                  value: ["released","upcoming"],
+                },
+                enumOptions: [
+                    { title: "全部", value: "" },
+                    { title: "Tencent", value: "2007" },
+                    { title: "iQiyi", value: "1330" },
+                    { title: "Youku", value: "1419" },
+                    { title: "Bilibili", value: "1605" },
+                    { title: "MGTV", value: "1631" },
+                    { title: "Netflix", value: "213" },
+                    { title: "Disney+", value: "2739" },
+                    { title: "HBO", value: "49" },
+                    { title: "HBO Max", value: "3186" },
+                    { title: "Apple TV+", value: "2552" },
+                    { title: "Hulu", value: "453" },
+                    { title: "Amazon Prime Video", value: "1024" },
+                    { title: "FOX", value: "19" },
+                    { title: "Paramount", value: "576" },
+                    { title: "Paramount+", value: "4330" },
+                    { title: "TV Tokyo", value: "94" },
+                    { title: "BBC One", value: "332" },
+                    { title: "BBC Two", value: "295" },
+                    { title: "NBC", value: "6" },
+                    { title: "AMC+", value: "174" },
+                    { title: "We TV", value: "3732" },
+                    { title: "Viu TV", value: "2146" },
+                    { title: "TVB", value: "48" }
+                ]
+            },
+            {
+                name: "with_genres",
+                title: "🎭内容类型",
+                type: "enumeration",
+                description: "选择要筛选的内容类型",
+                value: "",
+                belongTo: {
+                  paramName: "air_status",
+                  value: ["released","upcoming"],
+                },
+                enumOptions: [
+                    { title: "全部类型", value: "" },
+                    { title: "犯罪", value: "80" },
+                    { title: "动画", value: "16" },
+                    { title: "喜剧", value: "35" },
+                    { title: "剧情", value: "18" },
+                    { title: "家庭", value: "10751" },
+                    { title: "儿童", value: "10762" },
+                    { title: "悬疑", value: "9648" },
+                    { title: "真人秀", value: "10764" },
+                    { title: "脱口秀", value: "10767" },
+                    { title: "肥皂剧", value: "10766" },
+                    { title: "纪录片", value: "99" },
+                    { title: "动作与冒险", value: "10759" },
+                    { title: "科幻与奇幻", value: "10765" },
+                    { title: "战争与政治", value: "10768" }
+                ]
+            },
+            {
+                name: "air_status",
+                title: "上映状态",
+                type: "enumeration",
+                description: "默认已上映",
+                value: "released",
+                enumOptions: [
+                    { title: "已上映", value: "released" },
+                    { title: "未上映", value: "upcoming" }
+                ]
+            },
+            {
+                name: "sort_by",
+                title: "🔢 排序方式",
+                type: "enumeration",
+                description: "选择内容排序方式,默认上映时间↓",
+                value: "first_air_date.desc",
+                enumOptions: [
+                    { title: "上映时间↓", value: "first_air_date.desc" },
+                    { title: "上映时间↑", value: "first_air_date.asc" },
+                    { title: "人气最高", value: "popularity.desc" },
+                    { title: "评分最高", value: "vote_average.desc" },
+                    { title: "最多投票", value: "vote_count.desc" }
+                ]
+            },
+            { name: "page", title: "页码", type: "page" },
+            { name: "language", title: "语言", type: "language", value: "zh-CN" }
+        ]
+    },
+    // --- 出品公司模块 ---
+    {
+      id: "companies",
+      title: "TMDB 出品公司",
+      functionName: "tmdbCompanies",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "with_companies",
+          title: "出品公司",
+          type: "enumeration",
+          value: "",
+          description: "选择一个公司以查看其剧集内容",
+          belongTo: {
+            paramName: "air_status",
+            value: ["released","upcoming"],
+          },
+          enumOptions: [
+            { title: "全部", value: "" },
+            { title: "Disney", value: "2" },
+            { title: "Warner Bros", value: "174" },
+            { title: "Columbia", value: "5" },
+            { title: "Sony", value: "34" },
+            { title: "Universal", value: "33" },
+            { title: "Paramount", value: "4" },
+            { title: "20th Century", value: "25" },
+            { title: "Marvel", value: "420" },
+            { title: "Toho", value: "882" },
+            { title: "中国电影集团公司", value: "14714" },
+            { title: "BBC", value: "3324" },
+            { title: "印度", value: "1569" },
+            { title: "A24", value: "41077" },
+            { title: "Blumhouse", value: "3172" },
+            { title: "Working Title Films", value: "10163" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎭内容类型",
+          type: "enumeration",
+          description: "选择要筛选的内容类型",
+          value: "",
+          belongTo: {
+            paramName: "air_status",
+            value: ["released","upcoming"],
+          },
+          enumOptions: [
+            { title: "全部类型", value: "" },
+            { title: "冒险", value: "12" },
+            { title: "剧情", value: "18" },
+            { title: "动作", value: "28" },
+            { title: "动画", value: "16" },
+            { title: "历史", value: "36" },
+            { title: "喜剧", value: "35" },
+            { title: "奇幻", value: "14" },
+            { title: "家庭", value: "10751" },
+            { title: "恐怖", value: "27" },
+            { title: "悬疑", value: "9648" },
+            { title: "惊悚", value: "53" },
+            { title: "战争", value: "10752" },
+            { title: "爱情", value: "10749" },
+            { title: "犯罪", value: "80" },
+            { title: "科幻", value: "878" },
+            { title: "记录", value: "99" },
+            { title: "西部", value: "37" },
+            { title: "音乐", value: "10402" },
+            { title: "电视电影", value: "10770" }
+          ]
+        },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "默认已上映",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "🔢 排序方式",
+          type: "enumeration",
+          description: "选择内容排序方式,默认上映时间↓",
+          value: "primary_release_date.desc",
+          enumOptions: [
+            { title: "上映时间↓", value: "primary_release_date.desc" },
+            { title: "上映时间↑", value: "primary_release_date.asc" },
+            { title: "人气最高", value: "popularity.desc" },
+            { title: "评分最高", value: "vote_average.desc" },
+            { title: "最多投票", value: "vote_count.desc" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    // --- 高级筛选模块 ---
+    {
+        title: "TMDB 即将上映",
+        description: "即将上映的电影 (可筛选)",
+        requiresWebView: false,
+        functionName: "tmdbUpcomingMovies",
+        cacheDuration: 3600,
+        params: [
+            { name: "language", title: "语言", type: "language", value: "zh-CN" },
+            { 
+                name: "primary_release_date.gte", 
+                title: "起始日期 (含)", 
+                type: "input", 
+                description: "格式：YYYY-MM-DD（默认今天）", 
+                value: "",
+                placeholder: "例：2023-12-31"
+            },
+            { 
+                name: "primary_release_date.lte", 
+                title: "结束日期 (含)", 
+                type: "input", 
+                description: "格式：YYYY-MM-DD（可选）", 
+                value: "",
+                placeholder: "例：2024-05-01"
+            },
+            { 
+                name: "with_release_type", 
+                title: "发行渠道", 
+                type: "enumeration", 
+                description: "选择发行渠道（多选用逗号分隔）", 
+                value: "2,3",
+                enumOptions: [ 
+                    { title: "影院上映 (优先)", value: "2,3" },
+                    { title: "全部渠道", value: "" }, 
+                    { title: "数字发行", value: "4" }, 
+                    { title: "实体发行", value: "5" }, 
+                    { title: "电视播出", value: "6" }
+                ] 
+            },
+            { 
+                name: "with_genres", 
+                title: "🎭类型筛选", 
+                type: "enumeration", 
+                description: "选择电影类型", 
+                value: "",
+                enumOptions: [ 
+                    { title: "任意类型", value: "" }, 
+                    { title: "动作", value: "28" }, 
+                    { title: "冒险", value: "12" },
+                    { title: "动画", value: "16" }, 
+                    { title: "喜剧", value: "35" }, 
+                    { title: "犯罪", value: "80" },
+                    { title: "纪录", value: "99" }, 
+                    { title: "剧情", value: "18" }, 
+                    { title: "家庭", value: "10751" },
+                    { title: "悬疑", value: "9648" }, 
+                    { title: "爱情", value: "10749" },
+                    { title: "科幻", value: "878" }, 
+                    { title: "战争", value: "10752" },
+                    { title: "西部", value: "37" }, 
+                    { title: "电视电影", value: "10770" }
+                ] 
+            },
+            { 
+                name: "vote_average.gte", 
+                title: "最低评分", 
+                type: "input", 
+                description: "输入0-10之间的数字（如7）", 
+                value: "",
+                placeholder: "0-10"
+            },
+            { 
+                name: "vote_count.gte", 
+                title: "最少评价数", 
+                type: "input", 
+                description: "输入最小评价数量", 
+                value: "",
+                placeholder: "如：100"
+            },
+            { 
+                name: "with_keywords", 
+                title: "关键词", 
+                type: "input", 
+                description: "英文关键词（如'superhero'）", 
+                value: "",
+                placeholder: "多个用逗号分隔"
+            },
+            { name: "page", title: "页码", type: "page" }
+        ]
+    },
+    // =============IMDB模块=============
+    {
+      title: "IMDb Top 250 电影",
+      description: "IMDb 用户评分最高的 250 部电影",
+      requiresWebView: false,
+      functionName: "loadImdbCardItems",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", 
+          title: "🔗 列表地址", 
+          type: "constant", 
+          value: "https://www.imdb.com/chart/top/?ref_=nv_mv_250" },
+        { name: "page", title: "页码", type: "page" },
+        { name: "limit", title: "🔢 每页数量", type: "constant", value: "20" }
+      ]
+    },
+    {
+      title: "IMDb Top 250 剧集",
+      description: "IMDb 用户评分最高的 250 部剧集",
+      requiresWebView: false,
+      functionName: "loadImdbCardItems",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", 
+          title: "🔗 列表地址", 
+          type: "constant", 
+          value: "https://www.imdb.com/chart/toptv/?ref_=nv_tvv_250" },
+        { name: "page", title: "页码", type: "page" },
+        { name: "limit", title: "🔢 每页数量", type: "constant", value: "20" }
+      ]
+    },
+    {
+      title: "IMDB 自定义片单",
+      description: "解析 IMDB 热门电影/剧集等网页片单 (需输入 URL)",
+      requiresWebView: false,
+      functionName: "loadImdbCardItems",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "url", 
+          title: "🔗 列表地址", 
+          type: "input", 
+          description: "输入 IMDB 片单或榜单地址",
+          placeholders: [
+            { title: "时下热门电影", 
+              value: "https://www.imdb.com/chart/moviemeter/?ref_=nv_mv_mpm" },
+            { title: "时下热门剧集", 
+              value: "https://www.imdb.com/chart/tvmeter/?ref_=nv_tvv_mptv" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "limit", title: "🔢 每页数量", type: "constant", value: "20" }
+      ]
+    },
+    // =============BGM模块=============
+{
+    title: "Bangumi 近期热门动画",
+    description: "浏览近期热门动画",
+    requiresWebView: false,
+    functionName: "fetchRecentHot_bg",
+    cacheDuration: 3600,
+    params: [
+        { name: "page", title: "页码", type: "page" }
+    ]
+},
+{
+    title: "Bangumi 动画总排行",
+    description: "按年份、季度/全年、标签、分类、题材、地区、受众等浏览动画排行，并可按作品名筛选",
+    requiresWebView: false,
+    functionName: "fetchAirtimeRanking_bg",
+    cacheDuration: 3600,
+    params: [
+        { 
+            name: "type", 
+            title: "分类", 
+            type: "enumeration", 
+            value: "all", 
+            description: "选择动画的放送分类。",
+            enumOptions: [
+                { title: "全部", value: "all" },
+                { title: "TV", value: "tv" },
+                { title: "WEB", value: "web" },
+                { title: "OVA", value: "ova" },
+                { title: "剧场版", value: "movie" },
+                { title: "其他", value: "misc" }
+            ] 
+        },
+        { 
+            name: "year", 
+            title: "年份", 
+            type: "input", 
+            description: "例如: 2024。留空则浏览所有年份。",
+            value: ""
+        },
+        { 
+            name: "month", 
+            title: "月份/季度", 
+            type: "enumeration", 
+            value: "all", 
+            description: "选择全年或特定季度对应的月份。仅当填写了年份时有效。", 
+            enumOptions: [ 
+                { title: "全年", value: "all" }, 
+                { title: "冬季 (1月)", value: "1" }, 
+                { title: "春季 (4月)", value: "4" }, 
+                { title: "夏季 (7月)", value: "7" }, 
+                { title: "秋季 (10月)", value: "10" } 
+            ]
+        },
+        { 
+            name: "tag", 
+            title: "来源/标签 (可选)", 
+            type: "input", 
+            description: "输入主要标签, 如 原创, 漫画改, 轻小说改, 游戏改等。", 
+            value: "",
+            placeholders: [
+                { title: "原创", value: "原创" }, 
+                { title: "漫画改", value: "漫画改" }, 
+                { title: "轻小说改", value: "轻小说改" }, 
+                { title: "游戏改", value: "游戏改" }, 
+                { title: "小说改", value: "小说改" }
+            ]
+        },
+        { 
+            name: "genre_tag", 
+            title: "题材 (可选)", 
+            type: "enumeration", 
+            value: "", 
+            description: "选择动画题材。",
+            enumOptions: [ 
+                { title: "全部", value: "" }, 
+                { title: "科幻", value: "科幻" }, 
+                { title: "喜剧", value: "喜剧" }, 
+                { title: "校园", value: "校园" }, 
+                { title: "战斗", value: "战斗" }, 
+                { title: "恋爱", value: "恋爱" }, 
+                { title: "奇幻", value: "奇幻" }, 
+                { title: "剧情", value: "剧情" }, 
+                { title: "日常", value: "日常" }, 
+                { title: "机战", value: "机战" }, 
+                { title: "运动", value: "运动" }, 
+                { title: "悬疑", value: "悬疑" }, 
+                { title: "音乐", value: "音乐" }, 
+                { title: "治愈", value: "治愈" }, 
+                { title: "百合", value: "百合" }, 
+                { title: "惊悚", value: "惊悚" }, 
+                { title: "后宫", value: "后宫" }, 
+                { title: "推理", value: "推理" }, 
+                { title: "耽美", value: "耽美" }, 
+                { title: "冒险", value: "冒险" }, 
+                { title: "萌系", value: "萌系" }, 
+                { title: "穿越", value: "穿越" }, 
+                { title: "玄幻", value: "玄幻" }, 
+                { title: "乙女向", value: "乙女向" }, 
+                { title: "恐怖", value: "恐怖" }, 
+                { title: "历史", value: "历史" }, 
+                { title: "武侠", value: "武侠" }, 
+                { title: "美食", value: "美食" }, 
+                { title: "职场", value: "职场" }
+            ]
+        },
+        {
+            name: "region", 
+            title: "地区 (可选)", 
+            type: "enumeration", 
+            value: "",
+            description: "选择动画地区。",
+            enumOptions: [
+                { title: "全部", value: "" }, 
+                { title: "日本", value: "日本" }, 
+                { title: "中国大陆", value: "中国大陆" }, 
+                { title: "美国", value: "美国" }, 
+                { title: "欧美", value: "欧美" }, 
+                { title: "中国香港", value: "中国香港" }, 
+                { title: "中国台湾", value: "中国台湾" },
+                { title: "韩国", value: "韩国" }, 
+                { title: "法国", value: "法国" }, 
+                { title: "英国", value: "英国" },
+                { title: "加拿大", value: "加拿大" }, 
+                { title: "德国", value: "德国" }, 
+                { title: "俄罗斯", value: "俄罗斯" },
+                { title: "其他", value: "其他"}
+            ]
+        },
+        {
+            name: "audience", 
+            title: "受众 (可选)", 
+            type: "enumeration", 
+            value: "",
+            description: "选择动画受众。",
+            enumOptions: [
+                { title: "全部", value: "" }, 
+                { title: "少女向", value: "少女向" }, 
+                { title: "少年向", value: "少年向" }, 
+                { title: "青年向", value: "青年向" }, 
+                { title: "女性向", value: "女性向" }, 
+                { title: "子供向", value: "子供向" },
+                { title: "BL", value: "BL" }, 
+                { title: "GL", value: "GL" }
+            ]
+        },
+        { 
+            name: "title_keyword", 
+            title: "作品名关键词 (可选)", 
+            type: "input", 
+            description: "输入关键词在当前结果中过滤作品标题。", 
+            value: "" 
+        },
+        { 
+            name: "sort", 
+            title: "排序方式", 
+            type: "enumeration", 
+            value: "rank", 
+            enumOptions: [ 
+                { title: "综合排名", value: "rank" },
+                { title: "热度趋势", value: "trends" },
+                { title: "名称", value: "title" }    
+            ] 
+        },
+        { name: "page", title: "页码", type: "page" }
+    ]
+},
+{
+    title: "Bangumi 动画放送日历",
+    description: "查看动画每日/每周放送时间表 (数据来自Bangumi API)",
+    requiresWebView: false,
+    functionName: "fetchDailyCalendarApi_bg",
+    sectionMode: false,
+    cacheDuration: 3600,
+    params: [
+        {
+            name: "filterType",
+            title: "筛选范围",
+            type: "enumeration",
+            value: "today",
+            enumOptions: [
+                { title: "今日放送", value: "today" },
+                { title: "指定单日", value: "specific_day" },
+                { title: "整周放送", value: "all_week" }
+            ]
+        },
+        {
+            name: "specificWeekday",
+            title: "选择星期",
+            type: "enumeration",
+            value: "1",
+            description: "仅当筛选范围为\"指定单日\"时有效。",
+            enumOptions: [
+                { title: "星期一", value: "1" },
+                { title: "星期二", value: "2" },
+                { title: "星期三", value: "3" },
+                { title: "星期四", value: "4" },
+                { title: "星期五", value: "5" },
+                { title: "星期六", value: "6" },
+                { title: "星期日", value: "7" }
+            ],
+            belongTo: { paramName: "filterType", value: ["specific_day"] }
+        },
+        {
+            name: "dailySortOrder", 
+            title: "排序方式", 
+            type: "enumeration",
+            value: "popularity_rat_bgm",
+            description: "对结果进行排序",
+            enumOptions: [
+                { title: "热度", value: "popularity_rat_bgm" },
+                { title: "评分", value: "score_bgm_desc" },
+                { title: "放送日", value: "airdate_desc" },
+                { title: "默认", value: "default" }
+            ]
+        },
+        {
+            name: "dailyRegionFilter", 
+            title: "地区筛选", 
+            type: "enumeration", 
+            value: "all",
+            description: "筛选特定地区的放送内容 (主要依赖TMDB数据)",
+            enumOptions: [
+                { title: "全部地区", value: "all" },
+                { title: "日本", value: "JP" },
+                { title: "中国大陆", value: "CN" },
+                { title: "欧美", value: "US_EU" },
+                { title: "其他/未知", value: "OTHER" }
+            ]
+        }
+    ]
+},
+{
+    title: "Bangumi 动画标签",
+    description: "按标签、年份、月份浏览动画列表，支持排序和分页。",
+    requiresWebView: false,
+    functionName: "fetchBangumiTagPage_bg",
+    cacheDuration: 3600,
+    params: [
+        {
+            name: "tag_keyword", 
+            title: "动画标签 (可留空)", 
+            type: "input", 
+            description: "输入单个动画标签如 TV, 漫画改, 原创, 搞笑, 战斗等。支持图片中显示的任意标签。留空则浏览热门标签总览。", 
+            value: "", 
+            placeholders: [
+                { title: "百合", value: "百合" },
+                { title: "伪娘", value: "伪娘" },
+                { title: "搞笑", value: "搞笑" },
+                { title: "原创", value: "原创" },
+                { title: "恋爱", value: "恋爱" },
+                { title: "校园", value: "校园" },
+                { title: "战斗", value: "战斗" },
+                { title: "奇幻", value: "奇幻" },
+                { title: "漫改", value: "漫改" },
+                { title: "日常", value: "日常" },
+                { title: "青春", value: "青春" },
+                { title: "治愈", value: "治愈" },
+                { title: "后宫", value: "后宫" },
+                { title: "异世界", value: "异世界" },
+                { title: "科幻", value: "科幻" },
+                { title: "新房昭之", value: "新房昭之" },
+                { title: "虚渊玄", value: "虚渊玄" },
+                { title: "宫崎骏", value: "宫崎骏" },
+                { title: "庵野秀明", value: "庵野秀明" },
+                { title: "新海诚", value: "新海诚" },
+                { title: "汤浅政明", value: "汤浅政明" },
+                { title: "西尾维新", value: "西尾维新" },
+                { title: "今石洋之", value: "今石洋之" },
+                { title: "渡边信一郎", value: "渡边信一郎" },
+                { title: "押井守", value: "押井守" },
+                { title: "京都动画 (京阿尼)", value: "京都动画" },
+                { title: "A-1 Pictures", value: "A-1 Pictures" },
+                { title: "J.C.STAFF (节操社)", value: "J.C.STAFF" },
+                { title: "MADHOUSE", value: "MADHOUSE" },
+                { title: "BONES (骨头社)", value: "BONES" },
+                { title: "P.A.WORKS", value: "P.A.WORKS" },
+                { title: "SHAFT", value: "SHAFT" },
+                { title: "动画工房", value: "动画工房" },
+                { title: "ufotable (飞碟社)", value: "ufotable" },
+                { title: "吉卜力工作室 (吉卜力)", value: "吉卜力工作室" },
+                { title: "请输入其他任意标签...", value: "" }
+            ]
+        },
+        {
+            name: "airtime_year",
+            title: "年份 (可选)",
+            type: "input",
+            description: "输入4位年份 (如 2024)，或留空以不限年份。可像标签一样自由输入。",
+            value: ""
+        },
+        {
+            name: "airtime_month",
+            title: "月份 (可选)",
+            type: "enumeration",
+            description: "选择放送月份。仅当填写了年份时有效。",
+            value: "",
+            enumOptions: [
+                { title: "全年/不限", value: "" },
+                { title: "1月", value: "1" },
+                { title: "2月", value: "2" },
+                { title: "3月", value: "3" },
+                { title: "4月", value: "4" },
+                { title: "5月", value: "5" },
+                { title: "6月", value: "6" },
+                { title: "7月", value: "7" },
+                { title: "8月", value: "8" },
+                { title: "9月", value: "9" },
+                { title: "10月", value: "10" },
+                { title: "11月", value: "11" },
+                { title: "12月", value: "12" }
+            ]
+        },
+        {
+            name: "sort", 
+            title: "排序方式", 
+            type: "enumeration", 
+            value: "rank",
+            enumOptions: [
+                { title: "综合排名", value: "rank" },   
+                { title: "标注数", value: "collects" }, 
+                { title: "日期", value: "date" },     
+                { title: "名称", value: "title" }    
+            ]
+        },
+        { name: "page", title: "页码", type: "page" }
+        ]
+    }
   ]
 };
 
 // ===============辅助函数===============
+let tmdbGenresCache = null;
+
+async function fetchTmdbGenres() {
+    if (tmdbGenresCache) return tmdbGenresCache;
+    
+    const [movieGenres, tvGenres] = await Promise.all([
+        Widget.tmdb.get('/genre/movie/list', { params: { language: 'zh-CN' } }),
+        Widget.tmdb.get('/genre/tv/list', { params: { language: 'zh-CN' } })
+    ]);
+    
+    tmdbGenresCache = {
+        movie: movieGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
+        tv: tvGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {})
+    };
+    return tmdbGenresCache;
+}
+
+function getTmdbGenreTitles(genreIds, mediaType) {
+    const genres = tmdbGenresCache?.[mediaType] || {};
+    const topThreeIds = genreIds.slice(0, 3); 
+    return topThreeIds
+        .map(id => genres[id]?.trim() || `\u672a\u77e5\u7c7b\u578b(${id})`)
+        .filter(Boolean)
+        .join('•');
+}
+
+function getDoubanGenreTitles(genres, itemType) {
+    if (!genres) {
+        return "";
+    }
+    
+    let genreArray = [];
+    
+    if (typeof genres === 'string') {
+        const cleanGenres = genres.trim();
+        if (cleanGenres) {
+            if (cleanGenres.includes(',')) {
+                genreArray = cleanGenres.split(',');
+            } else if (cleanGenres.includes('、')) {
+                genreArray = cleanGenres.split('、');
+            } else if (cleanGenres.includes('/')) {
+                genreArray = cleanGenres.split('/');
+            } else if (cleanGenres.includes(' ')) {
+                genreArray = cleanGenres.split(' ');
+            } else {
+                genreArray = [cleanGenres];
+            }
+        }
+    } 
+    else if (Array.isArray(genres)) {
+        genreArray = genres.filter(g => g && g.trim());
+    } 
+    else {
+        const genreStr = String(genres).trim();
+        if (genreStr && genreStr !== 'undefined' && genreStr !== 'null') {
+            genreArray = [genreStr];
+        }
+    }
+    
+    genreArray = genreArray
+        .map(g => g.trim())
+        .filter(g => g && g !== '')
+        .filter((genre, index, arr) => arr.indexOf(genre) === index);
+    
+    if (genreArray.length === 0) {
+        return "";
+    }
+    
+    const topThreeGenres = genreArray.slice(0, 3);
+    return topThreeGenres.join(' ');
+}
+
+function extractGenresFromText(text) {
+    if (!text) return [];
+    
+    const genreKeywords = [
+        '\u52a8\u4f5c', '\u79d1\u5e7b', '\u707e\u96be', '\u7231\u60c5', '\u559c\u5267', '\u60ac\u7591', '\u72af\u7f6a', '\u5192\u9669', '\u5947\u5e7b', '\u6218\u4e89',
+        '\u5386\u53f2', '\u6b66\u4fa0', '\u60ca\u609a', '\u6050\u6016', '\u60c5\u8272', '\u52a8\u753b', '\u5267\u60c5', '\u897f\u90e8', '\u5bb6\u5ead', '\u97f3\u4e50',
+        '\u8fd0\u52a8', '\u53e4\u88c5', '\u6b4c\u821e', '\u4f20\u8bb0', '\u77ed\u7247', '\u7eaa\u5f55\u7247', '\u6587\u827a', '\u9752\u6625', '\u6821\u56ed', '\u804c\u573a',
+        '\u90fd\u5e02', '\u519c\u6751', '\u519b\u4e8b', '\u8b66\u532a', '\u8c0d\u6218', '\u5bab\u5ef7', '\u795e\u8bdd', '\u9b54\u5e7b'
+    ];
+    
+    const foundGenres = [];
+    
+    const typePattern = /(?:\u7c7b\u578b|genre)[\uff1a:\s]*([^\n\r]+)/i;
+    const typeMatch = text.match(typePattern);
+    if (typeMatch) {
+        const typeText = typeMatch[1];
+        const types = typeText.split(/[\/\u3001,\uff0c\s]+/).filter(t => t.trim());
+        foundGenres.push(...types);
+    }
+    
+    for (const keyword of genreKeywords) {
+        if (text.includes(keyword) && !foundGenres.includes(keyword)) {
+            foundGenres.push(keyword);
+        }
+    }
+    
+    return foundGenres.slice(0, 3);
+}
+
 function formatItemDescription(item) {
     let description = item.description || '';
-    const hasRating = /评分|rating/i.test(description);
-    const hasYear = /年份|year/i.test(description);
+    const hasRating = /\u8bc4\u5206|rating/i.test(description);
+    const hasYear = /\u5e74\u4efd|year/i.test(description);
+    const hasType = /\u7c7b\u578b|type/i.test(description);
+    
+    if (item.itemType && !hasType) {
+        description = `\u7c7b\u578b: ${item.itemType} | ${description}`;
+    }
     
     if (item.rating && !hasRating) {
-        description = `评分: ${item.rating} | ${description}`;
+        description = `\u8bc4\u5206: ${item.rating} | ${description}`;
     }
     
     if (item.releaseDate && !hasYear) {
         const year = String(item.releaseDate).substring(0,4);
         if (/^\d{4}$/.test(year)) {
-            description = `年份: ${year} | ${description}`;
+            description = `\u5e74\u4efd: ${year} | ${description}`;
         }
     }
     
@@ -60,17 +1090,6 @@ function formatItemDescription(item) {
         .replace(/^\|\s*/, '')
         .replace(/\s*\|$/, '')
         .trim();
-}
-
-function createErrorItem(id, title, error) {
-    const errorMessage = String(error?.message || error || '未知错误');
-    const uniqueId = `error-${id.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`;
-    return {
-        id: uniqueId,
-        type: "error",
-        title: title || "加载失败",
-        description: `错误详情：${errorMessage}`
-    };
 }
 
 function calculatePagination(params) {
@@ -81,143 +1100,43 @@ function calculatePagination(params) {
         page = Math.floor(parseInt(params.start) / limit) + 1;
     }
     
-    if (page < 1) page = 1;
-    if (limit > 50) throw new Error("单页数量不能超过50");
-
     const start = (page - 1) * limit;
     return { page, limit, start };
 }
 
 function getBeijingDate() {
     const now = new Date();
-    
     const beijingTime = now.getTime() + (8 * 60 * 60 * 1000);
     const beijingDate = new Date(beijingTime);
-    
-    const year = beijingDate.getUTCFullYear();
-    const month = String(beijingDate.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(beijingDate.getUTCDate()).padStart(2, '0');
-    
-    return `${year}-${month}-${day}`;
+    return `${beijingDate.getUTCFullYear()}-${String(beijingDate.getUTCMonth() + 1).padStart(2, '0')}-${String(beijingDate.getUTCDate()).padStart(2, '0')}`;
 }
-// ===============豆瓣功能函数===============
-async function loadDoubanCardItems(params = {}) {
-  try {
-    const url = params.url;
-    if (!url) throw new Error("缺少片单 URL");
-    if (url.includes("douban.com/doulist/")) {
-      return loadDoubanDefaultList(params);
-    } else if (url.includes("douban.com/subject_collection/")) {
-      return loadDoubanSubjectCollection(params);
-    } else {
-        throw new Error("不支持的豆瓣 URL 格式");
+
+function parseDoubanAppDispatchUrl(url) {
+    const cleanedUrl = url.replace(/\s+/g, '').trim();
+    const questionMarkIndex = cleanedUrl.indexOf('?');
+    const queryString = cleanedUrl.substring(questionMarkIndex + 1);
+    
+    const params = {};
+    const paramPairs = queryString.split('&');
+    for (const pair of paramPairs) {
+        const [key, value] = pair.split('=');
+        params[decodeURIComponent(key)] = decodeURIComponent(value);
     }
-  } catch (error) {
-    console.error("解析豆瓣片单失败:", error);
-    throw error;
-  }
+    
+    const uriParam = params['uri'];
+    const cleanUri = (uriParam.startsWith('/') ? uriParam.substring(1) : uriParam).trim();
+    
+    if (cleanUri.includes('subject_collection/')) {
+        return `https://m.douban.com/${cleanUri}`;
+    }
+    else if (cleanUri.includes('doulist/')) {
+        return `https://www.douban.com/${cleanUri}`;
+    }
+    
+    return null;
 }
 
-async function loadDoubanDefaultList(params = {}) {
-  const { start, limit } = calculatePagination(params);
-  const url = params.url;
-  const listId = url.match(/doulist\/(\d+)/)?.[1];
-  if (!listId) throw new Error("无法从 URL 获取豆瓣豆列 ID");
-  const pageUrl = `https://www.douban.com/doulist/${listId}/?start=${start}&sort=&playable=&sub_type=`;
-  const response = await Widget.http.get(pageUrl, {
-    headers: {
-      Referer: `https://www.douban.com/`,
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-    },
-  });
-  if (!response || !response.data) throw new Error("获取豆瓣豆列数据失败");
-  const docId = Widget.dom.parse(response.data);
-  if (docId < 0) throw new Error("解析豆瓣豆列 HTML 失败");
-  const itemElements = Widget.dom.select(docId, "div.doulist-item");
-  let fallbackItemElements = [];
-  if (!itemElements || itemElements.length === 0) {
-       const articleElement = Widget.dom.selectFirst(docId, ".article");
-       if (articleElement >= 0) {
-            fallbackItemElements = Widget.dom.select(articleElement, ".doulist-subject");
-            if (!fallbackItemElements || fallbackItemElements.length === 0) {
-                 fallbackItemElements = Widget.dom.select(articleElement, "li.subject-item");
-            }
-       }
-  }
-  const finalItemElements = (itemElements && itemElements.length > 0) ? itemElements : fallbackItemElements;
-  if (!finalItemElements || finalItemElements.length === 0) {
-      const paging = Widget.dom.selectFirst(docId, ".paginator .next a");
-      if (paging < 0) {
-          return [];
-      } else {
-           return [];
-      }
-  }
-  let doubanIds = [];
-  for (const itemId of finalItemElements) {
-       let titleElementId = Widget.dom.selectFirst(itemId, ".title a");
-       if (titleElementId < 0) {
-           titleElementId = Widget.dom.selectFirst(itemId, ".item-title a");
-       }
-       if (titleElementId < 0) {
-           titleElementId = Widget.dom.selectFirst(itemId, "a[onclick*='subject']");
-       }
-      if (titleElementId >= 0) {
-          const link = await Widget.dom.attr(titleElementId, "href");
-          const idMatch = link ? link.match(/subject\/(\d+)/) : null;
-          const title = await Widget.dom.text(titleElementId);
-          if (idMatch && idMatch[1]) {
-              let coverUrl = "";
-              let imgElementId = Widget.dom.selectFirst(itemId, ".post img");
-              if (imgElementId < 0) {
-                 imgElementId = Widget.dom.selectFirst(itemId, ".item-poster img");
-              }
-              if (imgElementId >= 0) {
-                  coverUrl = await Widget.dom.attr(imgElementId, "src");
-                   if (coverUrl) {
-                       coverUrl = coverUrl.replace(/\/(s|m|sq)\//, '/l/');
-                   }
-              }
-              let description = "";
-              let abstractElementId = Widget.dom.selectFirst(itemId, ".abstract");
-              if (abstractElementId < 0) {
-                  abstractElementId = Widget.dom.selectFirst(itemId, ".card-abstract");
-              }
-               if (abstractElementId >= 0) {
-                   description = await Widget.dom.text(abstractElementId);
-                   description = description.trim().replace(/\n\s*/g, ' ');
-               }
-              let rating = undefined;
-              let ratingElementId = Widget.dom.selectFirst(itemId, ".rating .rating_nums");
-              if (ratingElementId < 0) {
-                  ratingElementId = Widget.dom.selectFirst(itemId, ".item-rating .rating_nums");
-              }
-              if (ratingElementId >= 0) {
-                  rating = await Widget.dom.text(ratingElementId);
-                  rating = rating.trim();
-              }
-              doubanIds.push({
-                  id: idMatch[1],
-                  type: "douban",
-                  title: title ? title.trim() : "未知标题",
-                  coverUrl: coverUrl || undefined,
-                  description: formatItemDescription({
-                      description: description || undefined,
-                      rating: rating,
-                      releaseDate: item.releaseDate
-                  }),
-                  rating: rating ? parseFloat(rating) : undefined
-                });
-          } else {
-             console.warn("解析豆列项时未找到 subject ID, Title:", title, "Link:", link);
-          }
-      } else {
-         console.warn("在豆列项中未找到标题链接元素, Item ID:", itemId);
-      }
-  }
-  return doubanIds;
-}
-
+// ===============豆瓣功能函数===============
 async function loadDoubanItemsFromApi(params = {}) {
   const { start, limit } = calculatePagination(params);
   const url = params.url;
@@ -230,9 +1149,27 @@ async function loadDoubanItemsFromApi(params = {}) {
       "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
     },
   });
-  if (response.data && response.data.subject_collection_items) {
-    const items = response.data.subject_collection_items;
-    const doubanIds = items.map((item) => ({
+  
+  const items = response.data.subject_collection_items;
+  return items.map((item) => {
+    let genres = item.genres;
+    
+    if (!genres || (Array.isArray(genres) && genres.length === 0)) {
+        const textToExtract = [
+            item.card_subtitle,
+            item.description,
+            item.abstract
+        ].filter(Boolean).join(' ');
+        
+        if (textToExtract) {
+            const extractedGenres = extractGenresFromText(textToExtract);
+            if (extractedGenres.length > 0) {
+                genres = extractedGenres;
+            }
+        }
+    }
+   
+    return {
       id: item.id,
       type: "douban",
       title: item.title,
@@ -243,23 +1180,314 @@ async function loadDoubanItemsFromApi(params = {}) {
           releaseDate: item.year
       }),
       rating: item.rating?.value,
-      releaseDate: item.year
-    }));
-    return doubanIds;
-  }
-  return [];
+      releaseDate: item.year,
+      genreTitle: getDoubanGenreTitles(genres || [], null)
+    };
+  });
 }
 
-async function loadDoubanSubjectCollection(params = {}) {
-  const listIdMatch = params.url.match(/subject_collection\/(\w+)/);
-  if (!listIdMatch) throw new Error("无法从 URL 获取豆瓣合集 ID");
-  const listId = listIdMatch[1];
-  const { start, limit } = calculatePagination(params);
-  const apiUrl = `https://m.douban.com/rexxar/api/v2/subject_collection/${listId}/items`;
-  return await loadDoubanItemsFromApi({
-      ...params,
-      url: apiUrl,
+async function loadDoubanHotList(params = {}) {
+  const url = params.url;
+  
+  const uriMatch = url.match(/uri=([^&]+)/);
+  if (!uriMatch) {
+    throw new Error("\u65e0\u6cd5\u89e3\u6790\u8c46\u74e3dispatch URL");
+  }
+  
+  const uri = decodeURIComponent(uriMatch[1]);
+  const collectionMatch = uri.match(/\/subject_collection\/([^\/]+)/);
+  if (!collectionMatch) {
+    throw new Error("\u65e0\u6cd5\u4ece URI\u4e2d\u63d0\u53d6collection ID");
+  }
+  
+  const collectionId = collectionMatch[1];
+  
+  const apiUrl = `https://m.douban.com/rexxar/api/v2/subject_collection/${collectionId}/items?updated_at&items_only=1&for_mobile=1`;
+  const referer = `https://m.douban.com/subject_collection/${collectionId}/`;
+  
+  const response = await Widget.http.get(apiUrl, {
+    headers: {
+      Referer: referer,
+      "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+    },
   });
+  
+  if (!response.data || !response.data.subject_collection_items) {
+    throw new Error("\u83b7\u53d6\u8c46\u74e3\u70ed\u699c\u6570\u636e\u5931\u8d25");
+  }
+  
+  const items = response.data.subject_collection_items;
+  
+  return items.map((item) => {
+    let genres = item.genres;
+    
+    if (!genres || (Array.isArray(genres) && genres.length === 0)) {
+        const textToExtract = [
+            item.card_subtitle,
+            item.description,
+            item.abstract
+        ].filter(Boolean).join(' ');
+        
+        if (textToExtract) {
+            const extractedGenres = extractGenresFromText(textToExtract);
+            if (extractedGenres.length > 0) {
+                genres = extractedGenres;
+            }
+        }
+    }
+    
+    const itemType = determineItemType(item, params.type);
+   
+    return {
+      id: item.id,
+      type: "douban",
+      title: item.title,
+      coverUrl: item.cover?.url,
+      description: formatItemDescription({
+          description: item.card_subtitle || item.description,
+          rating: item.rating?.value,
+          releaseDate: item.year,
+          itemType: itemType
+      }),
+      rating: item.rating?.value,
+      releaseDate: item.year,
+      genreTitle: getDoubanGenreTitles(genres || [], itemType),
+      itemType: itemType
+    };
+  });
+}
+
+function determineItemType(item, paramType) {
+  if (paramType === "movie") return "\u7535\u5f71";
+  if (paramType === "tv") return "\u5267\u96c6";
+  if (paramType === "subject") {
+    if (item.subtype === "movie") return "\u7535\u5f71";
+    
+    const cardSubtitle = item.card_subtitle || "";
+    if (cardSubtitle.includes("\u7535\u5f71")) return "\u7535\u5f71";
+    if (cardSubtitle.includes("\u5267\u96c6") || cardSubtitle.includes("\u7535\u89c6\u5267")) return "\u5267\u96c6";
+    
+    return "\u7efc\u5408";
+  }
+  return "\u672a\u77e5";
+}
+
+function detectMultiTypeItems(items) {
+  const titleTypeMap = new Map();
+  
+  for (const item of items) {
+    const title = item.title.trim();
+    if (!titleTypeMap.has(title)) {
+      titleTypeMap.set(title, new Set());
+    }
+    
+    let itemType = item.type;
+    if (item.subtype) {
+      itemType = item.subtype;
+    }
+    
+    titleTypeMap.get(title).add(itemType);
+  }
+  
+  const multiTypesTitles = new Set();
+  for (const [title, types] of titleTypeMap.entries()) {
+    if (types.size > 1) {
+      const hasMovieOrTv = types.has('movie') || types.has('tv');
+      if (hasMovieOrTv) {
+        multiTypesTitles.add(title);
+      }
+    }
+  }
+  
+  return items.map(item => {
+    const title = item.title.trim();
+    const isMultiType = multiTypesTitles.has(title);
+    
+    return {
+      ...item,
+      shouldUseMultiTypeMatching: isMultiType
+    };
+  });
+}
+
+function detectItemTypeFromContent(item) {
+  const aliases = (item.original_title || item.aka || item.alternate_title || "").toLowerCase();
+  if (aliases.includes("\u7535\u5f71\u7248") || aliases.includes("(\u7535\u5f71)") || aliases.includes("movie")) {
+    return "movie";
+  }
+  if (aliases.includes("\u7535\u89c6\u5267\u7248") || aliases.includes("(\u7535\u89c6\u5267)") || aliases.includes("tv") || aliases.includes("series")) {
+    return "tv";
+  }
+  
+  const description = (item.card_subtitle || item.description || item.abstract || "").toLowerCase();
+  const title = (item.title || "").toLowerCase();
+  
+  if (description.includes("\u7535\u5f71") && !description.includes("\u7535\u89c6") && !description.includes("\u5267")) {
+    return "movie";
+  }
+  
+  if (description.includes("\u7535\u89c6\u5267") || description.includes("\u5267\u96c6") || description.includes("\u96c6\u6570") || 
+      description.includes("\u5b63") || description.includes("\u5168") && description.includes("\u96c6")) {
+    return "tv";
+  }
+  
+  if (description.includes("\u52a8\u753b") || title.includes("\u52a8\u753b") || 
+      description.includes("\u756a\u5267") || description.includes("anime") ||
+      description.includes("animation") || aliases.includes("\u52a8\u753b")) {
+    
+    if (description.includes("\u7535\u5f71") || title.includes("\u7535\u5f71") || 
+        description.includes("\u5267\u573a\u7248") || title.includes("\u5267\u573a\u7248")) {
+      return "movie";
+    }
+    
+    if (description.includes("\u756a\u5267") || description.includes("\u7b2c") && description.includes("\u5b63") ||
+        description.includes("\u96c6") && !description.includes("\u7535\u5f71") ||
+        description.includes("tv") || description.includes("series")) {
+      return "tv";
+    }
+    
+    return "multi";
+  }
+  
+  if (description.includes("\u5206\u949f") || description.includes("min") || description.includes("\u5c0f\u65f6")) {
+    return "movie";
+  }
+  
+  if (title.includes("\u7535\u5f71\u7248")) {
+    return "movie";
+  }
+  if (title.includes("\u7535\u89c6\u5267\u7248") || title.includes("\u5267\u7248")) {
+    return "tv";
+  }
+  
+  return null;
+}
+
+function detectAndAssignTypePreferences(items) {
+  const titleItemsMap = new Map();
+  
+  for (const item of items) {
+    const title = item.title.trim();
+    if (!titleItemsMap.has(title)) {
+      titleItemsMap.set(title, []);
+    }
+    titleItemsMap.get(title).push(item);
+  }
+  
+  const multiItemTitles = new Set();
+  for (const [title, titleItems] of titleItemsMap.entries()) {
+    if (titleItems.length > 1) {
+      const hasMultipleTypes = titleItems.some((item, index) => {
+        const otherItems = titleItems.filter((_, i) => i !== index);
+        const itemType = detectItemTypeFromContent(item);
+        return otherItems.some(otherItem => {
+          const otherType = detectItemTypeFromContent(otherItem);
+          return itemType && otherType && itemType !== otherType;
+        });
+      });
+      
+      if (hasMultipleTypes) {
+        multiItemTitles.add(title);
+      } else {
+        multiItemTitles.add(title);
+      }
+    }
+  }
+  
+  const itemsWithPreferences = [];
+  const processedTitles = new Map();
+  
+  for (const item of items) {
+    const title = item.title.trim();
+    const isMultiTypeTitle = multiItemTitles.has(title);
+    
+    let assignedTypePreference = null;
+    
+    if (isMultiTypeTitle) {
+      if (!processedTitles.has(title)) {
+        processedTitles.set(title, []);
+      }
+      
+      const sameTitle = processedTitles.get(title);
+      const currentCount = sameTitle.length;
+      
+      if (currentCount === 0) {
+        assignedTypePreference = "movie";
+      } else if (currentCount === 1) {
+        assignedTypePreference = "tv";
+      }
+      
+      sameTitle.push(item.id);
+    }
+    
+    itemsWithPreferences.push({
+      ...item,
+      isMultiTypeTitle: isMultiTypeTitle,
+      assignedTypePreference: assignedTypePreference
+    });
+  }
+  
+  return itemsWithPreferences;
+}
+
+async function loadDoubanHotListWithTmdb(params = {}) {
+  const url = params.url;
+  
+  const uriMatch = url.match(/uri=([^&]+)/);
+  if (!uriMatch) {
+    throw new Error("\u65e0\u6cd5\u89e3\u6790\u8c46\u74e3dispatch URL");
+  }
+  
+  const uri = decodeURIComponent(uriMatch[1]);
+  const collectionMatch = uri.match(/\/subject_collection\/([^\/]+)/);
+  if (!collectionMatch) {
+    throw new Error("\u65e0\u6cd5\u4ece URI\u4e2d\u63d0\u53d6collection ID");
+  }
+  
+  const collectionId = collectionMatch[1];
+  
+  const apiUrl = `https://m.douban.com/rexxar/api/v2/subject_collection/${collectionId}/items?updated_at&items_only=1&for_mobile=1`;
+  const referer = `https://m.douban.com/subject_collection/${collectionId}/`;
+  
+  const response = await Widget.http.get(apiUrl, {
+    headers: {
+      Referer: referer,
+      "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+    },
+  });
+  
+  if (!response.data || !response.data.subject_collection_items) {
+    throw new Error("\u83b7\u53d6\u8c46\u74e3\u70ed\u699c\u6570\u636e\u5931\u8d25");
+  }
+  
+  const items = response.data.subject_collection_items;
+  
+  const processedItems = items.map((item) => {
+    let itemType = "multi";
+    
+    if (params.type === "movie") {
+      itemType = "movie";
+    } else if (params.type === "tv") {
+      itemType = "tv";
+    } else if (params.type === "subject") {
+      if (item.subtype === "movie") {
+        itemType = "movie";
+      } else if (item.subtype === "tv") {
+        itemType = "tv";
+      } else {
+        itemType = "multi";
+      }
+    }
+    
+    return {
+      ...item,
+      type: itemType
+    };
+  });
+  
+  const processedItemsWithMultiDetection = detectAndAssignTypePreferences(processedItems);
+  
+  return await fetchImdbItemsForDouban(processedItemsWithMultiDetection);
 }
 
 async function loadDoubanRecommendMovies(params = {}) {
@@ -275,16 +1503,14 @@ async function loadDoubanRecommendItems(params = {}, mediaType = "movie") {
   const category = params.category || "";
   const subType = params.type || "";
   const tags = params.tags || "";
-  const sortBy = params.sort_by || "T";
   const encodedTags = encodeURIComponent(tags);
   
   let url;
-  if (category === "全部" || category === "all") {
+  if (category === "\u5168\u90e8" || category === "all") {
     url = `https://m.douban.com/rexxar/api/v2/${mediaType}/recommend?refresh=0&start=${start}&count=${limit}&selected_categories=${encodeURIComponent(JSON.stringify(params.selected_categories || {}))}&uncollect=false&score_range=0,10`;
     if (encodedTags) url += `&tags=${encodedTags}`;
-    url += `&sort=${sortBy}`; 
   } else {
-    url = `https://m.douban.com/rexxar/api/v2/subject/recent_hot/${mediaType}?start=${start}&count=${limit}&category=${encodeURIComponent(category)}&type=${encodeURIComponent(subType)}&sort=${sortBy}`;
+    url = `https://m.douban.com/rexxar/api/v2/subject/recent_hot/${mediaType}?start=${start}&count=${limit}&category=${encodeURIComponent(category)}&type=${encodeURIComponent(subType)}`;
   }
 
   const response = await Widget.http.get(url, {
@@ -299,20 +1525,24 @@ async function loadDoubanRecommendItems(params = {}, mediaType = "movie") {
     const rating = item.rating?.value || (item.rate ? parseFloat(item.rate) : undefined);
     const releaseYear = item.year || item.release_date?.substring(0, 4);
     const cover = item.cover?.url || item.pic?.normal;
+    const dynamicDesc = item.card_subtitle || item.description || "";
     
-    let dynamicDesc = "";
-    switch(sortBy) {
-      case "U":
-        dynamicDesc = "近期热度排序";
-        break;
-      case "R":
-        dynamicDesc = `首映时间: ${releaseYear || '未知'}`;
-        break;
-      case "S":
-        dynamicDesc = `评分: ${rating?.toFixed(1) || '无'}`;
-        break;
-      default: // T
-        dynamicDesc = item.card_subtitle || item.description || "";
+    let genres = item.genres;
+    
+    if (!genres || (Array.isArray(genres) && genres.length === 0)) {
+        const textToExtract = [
+            item.card_subtitle,
+            item.description,
+            item.abstract,
+            item.intro
+        ].filter(Boolean).join(' ');
+        
+        if (textToExtract) {
+            const extractedGenres = extractGenresFromText(textToExtract);
+            if (extractedGenres.length > 0) {
+                genres = extractedGenres;
+            }
+        }
     }
 
     return {
@@ -326,56 +1556,521 @@ async function loadDoubanRecommendItems(params = {}, mediaType = "movie") {
         releaseDate: releaseYear ? `${releaseYear}-01-01` : undefined
       }),
       rating: rating,
-      releaseDate: releaseYear ? `${releaseYear}-01-01` : undefined
+      releaseDate: releaseYear ? `${releaseYear}-01-01` : undefined,
+      genreTitle: getDoubanGenreTitles(genres || [], null)
     };
   });
 }
 
-//===============TMDB功能函数===============
-async function fetchTmdbData(api, params) {
-    try {
-        const response = await Widget.tmdb.get(api, { params: params });
 
-        if (!response) {
-            throw new Error("获取数据失败");
-        }
-
-        const data = response.results;
-        
-        return data
-            .filter(item => {
-                const hasPoster = item.poster_path;
-                const hasTitle = item.title || item.name;
-                const hasValidId = Number.isInteger(item.id);
-                
-                return hasPoster && hasTitle && hasValidId;
-            })
-            .map((item) => {
-                let mediaType = item.media_type;
-                
-                if (!mediaType) {
-                    if (item.title) mediaType = "movie";
-                    else if (item.name) mediaType = "tv";
+async function fetchTmdbDataForDouban(key, mediaType) {
+    let searchTypes = [];
+    
+    if (mediaType === "movie") {
+        searchTypes = ["movie"];
+    } else if (mediaType === "tv") {
+        searchTypes = ["tv"];
+    } else if (mediaType === "multi") {
+        searchTypes = ["movie", "tv"];
+    } else {
+        searchTypes = ["movie", "tv"];
+    }
+    
+    const allResults = [];
+    
+    for (const type of searchTypes) {
+        try {
+            const tmdbResults = await Widget.tmdb.get(`/search/${type}`, {
+                params: {
+                    query: key,
+                    language: "zh_CN",
                 }
-                
-                return {
-                    id: item.id,
-                    type: "tmdb",
-                    title: item.title || item.name,
-                    description: item.overview,
-                    releaseDate: item.release_date || item.first_air_date,
-                    backdropPath: item.backdrop_path,
-                    posterPath: item.poster_path,
-                    rating: item.vote_average,
-                    mediaType: mediaType || "unknown",
-                };
             });
-    } catch (error) {
-        console.error("调用 TMDB API 失败:", error);
-        return [createErrorItem("tmdb-api", "API调用失败", error)];
+            
+            if (tmdbResults.results && tmdbResults.results.length > 0) {
+                const resultsWithType = tmdbResults.results.map(result => ({
+                    ...result,
+                    media_type: type
+                }));
+                allResults.push(...resultsWithType);
+            }
+        } catch (error) {
+        }
+    }
+    
+    return allResults;
+}
+
+function calculateSimilarity(str1, str2) {
+    const cleanStr1 = str1.toLowerCase().replace(/[^\u4e00-\u9fa5a-z0-9]/g, '');
+    const cleanStr2 = str2.toLowerCase().replace(/[^\u4e00-\u9fa5a-z0-9]/g, '');
+    
+    if (cleanStr1 === cleanStr2) return 1.0;
+    
+    const longer = cleanStr1.length > cleanStr2.length ? cleanStr1 : cleanStr2;
+    const shorter = cleanStr1.length > cleanStr2.length ? cleanStr2 : cleanStr1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    const editDistance = getEditDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+}
+
+function getEditDistance(str1, str2) {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+        matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+        for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    
+    return matrix[str2.length][str1.length];
+}
+
+function selectMatches(tmdbResults, originalTitle, originalYear, options = {}) {
+    if (tmdbResults.length === 0) return options.returnArray ? [] : null;
+    
+    const {
+        returnArray = false,
+        preferredType = null,
+        minThreshold = 0.7,
+        doubanItem = null
+    } = options;
+    
+    let actualPreferredType = preferredType;
+    if (!actualPreferredType && doubanItem) {
+        const detectedType = detectItemTypeFromContent(doubanItem);
+        if (detectedType) {
+            actualPreferredType = detectedType;
+        } else if (doubanItem.subtype === "movie") {
+            actualPreferredType = "movie";
+        } else if (doubanItem.subtype === "tv") {
+            actualPreferredType = "tv";
+        }
+    }
+    
+    if (!returnArray) {
+        if (tmdbResults.length === 1) return tmdbResults[0];
+        
+        let bestMatch = null;
+        let bestScore = 0;
+        
+        for (const result of tmdbResults) {
+            let score = calculateMatchScore(result, originalTitle, originalYear);
+            
+            if (actualPreferredType && result.media_type === actualPreferredType) {
+                score += 1.0;
+            }
+            
+            if (score > bestScore) {
+                bestScore = score;
+                bestMatch = result;
+            }
+        }
+        
+        return bestMatch;
+    } else {
+        const resultsByType = {};
+        for (const result of tmdbResults) {
+            const mediaType = result.media_type;
+            if (!resultsByType[mediaType]) {
+                resultsByType[mediaType] = [];
+            }
+            resultsByType[mediaType].push(result);
+        }
+        
+        const bestMatches = [];
+        for (const [mediaType, results] of Object.entries(resultsByType)) {
+            const bestMatch = selectMatches(results, originalTitle, originalYear, { preferredType: mediaType });
+            if (bestMatch) {
+                const score = calculateMatchScore(bestMatch, originalTitle, originalYear);
+                if (score >= minThreshold) {
+                    bestMatches.push(bestMatch);
+                }
+            }
+        }
+        
+        bestMatches.sort((a, b) => {
+            const scoreA = calculateMatchScore(a, originalTitle, originalYear);
+            const scoreB = calculateMatchScore(b, originalTitle, originalYear);
+            return scoreB - scoreA;
+        });
+        
+        return bestMatches;
     }
 }
 
+function calculateMatchScore(result, originalTitle, originalYear) {
+    const tmdbTitle = result.title || result.name || '';
+    const originalName = result.original_title || result.original_name || '';
+    
+    const titleSimilarity = Math.max(
+        calculateSimilarity(originalTitle, tmdbTitle),
+        calculateSimilarity(originalTitle, originalName)
+    );
+    
+    let exactMatchBonus = 0;
+    if (titleSimilarity >= 0.98) {
+        exactMatchBonus = 2.0;
+    } else if (titleSimilarity >= 0.9) {
+        exactMatchBonus = 1.0;
+    }
+    
+    let yearBonus = 0;
+    if (originalYear) {
+        const tmdbYear = (result.release_date || result.first_air_date || '').substring(0, 4);
+        if (tmdbYear && Math.abs(parseInt(originalYear) - parseInt(tmdbYear)) <= 1) {
+            yearBonus = 0.2;
+        }
+    }
+    
+    const popularityBonus = Math.min(result.popularity / 10000, 0.05);
+    const ratingBonus = Math.min(result.vote_average / 200, 0.025);
+    
+    return titleSimilarity + exactMatchBonus + yearBonus + popularityBonus + ratingBonus;
+}
+
+function generateGenreTitleFromTmdb(tmdbItem, doubanItem) {
+    let genres = doubanItem.genres;
+    
+    if (!genres || (Array.isArray(genres) && genres.length === 0)) {
+        const textToExtract = [
+            doubanItem.card_subtitle,
+            doubanItem.description,
+            doubanItem.abstract
+        ].filter(Boolean).join(' ');
+        
+        if (textToExtract) {
+            const extractedGenres = extractGenresFromText(textToExtract);
+            if (extractedGenres.length > 0) {
+                genres = extractedGenres;
+            }
+        }
+    }
+    
+    if (!genres || (Array.isArray(genres) && genres.length === 0)) {
+        if (tmdbItem.genre_ids && tmdbItem.genre_ids.length > 0) {
+            genres = tmdbItem.genre_ids.map(id => mapTmdbGenreIdToChineseName(id)).filter(Boolean);
+        }
+    }
+    
+    if (!genres || (Array.isArray(genres) && genres.length === 0)) {
+        return "";
+    }
+    
+    return getDoubanGenreTitles(genres, determineItemType(doubanItem, doubanItem.type));
+}
+
+function mapTmdbGenreIdToChineseName(genreId) {
+    const genreMap = {
+        28: "\u52a8\u4f5c", 12: "\u5192\u9669", 16: "\u52a8\u753b", 35: "\u559c\u5267", 80: "\u72af\u7f6a",
+        99: "\u7eaa\u5f55\u7247", 18: "\u5267\u60c5", 10751: "\u5bb6\u5ead", 14: "\u5947\u5e7b", 36: "\u5386\u53f2",
+        27: "\u6050\u6016", 10402: "\u97f3\u4e50", 9648: "\u60ac\u7591", 10749: "\u7231\u60c5", 878: "\u79d1\u5e7b",
+        10770: "\u7535\u89c6\u7535\u5f71", 53: "\u60ca\u609a", 10752: "\u6218\u4e89", 37: "\u897f\u90e8",
+        
+        10759: "\u52a8\u4f5c\u5192\u9669", 16: "\u52a8\u753b", 35: "\u559c\u5267", 80: "\u72af\u7f6a", 99: "\u7eaa\u5f55\u7247",
+        18: "\u5267\u60c5", 10751: "\u5bb6\u5ead", 10762: "\u513f\u7ae5", 9648: "\u60ac\u7591", 10763: "\u65b0\u95fb",
+        10764: "\u771f\u4eba\u79c0", 10765: "\u79d1\u5e7b\u5947\u5e7b", 10766: "\u80a5\u7682\u5267", 10767: "\u8131\u53e3\u79c0",
+        10768: "\u6218\u4e89\u653f\u6cbb", 37: "\u897f\u90e8"
+    };
+    
+    return genreMap[genreId] || null;
+}
+
+async function fetchImdbItemsForDouban(scItems) {
+    const promises = scItems.map(async (scItem) => {
+        const titleNormalizationRules = [
+            { pattern: /^\u7f57\u5c0f\u9ed1\u6218\u8bb0/, replacement: '\u7f57\u5c0f\u9ed1\u6218\u8bb0', forceMovieType: true },
+            { pattern: /^\u5343\u4e0e\u5343\u5bfb/, replacement: '\u5343\u4e0e\u5343\u5bfb', forceMovieType: true },
+            { pattern: /^\u54c8\u5c14\u7684\u79fb\u52a8\u57ce\u5821/, replacement: '\u54c8\u5c14\u7684\u79fb\u52a8\u57ce\u5821', forceMovieType: true },
+            { pattern: /^\u9b3c\u706d\u4e4b\u5203/, replacement: '\u9b3c\u706d\u4e4b\u5203', forceMovieType: true },
+            { pattern: /^\u5929\u6c14\u4e4b\u5b50/, replacement: '\u5929\u6c14\u4e4b\u5b50', forceMovieType: true },
+            { pattern: /^\u5742\u672c\u65e5\u5e38 Part 2/, replacement: '\u5742\u672c\u65e5\u5e38' },
+            { pattern: /^\u82cd\u5170\u8bc02 \u5f71\u4e09\u754c\u7bc7/, replacement: '\u82cd\u5170\u8bc0', forceFirstResult: true },
+            { pattern: /^\u6ca7\u5143\u56fe2 \u5143\u521d\u5c71\u756a\u5916\u7bc7/, replacement: '\u6ca7\u5143\u56fe' },
+            { pattern: /^\u77f3\u7eaa\u5143 \u7b2c\u56db\u5b63 Part 2/, replacement: '\u77f3\u7eaa\u5143' },
+            { pattern: /^\u53cc\u4eba\u72ec\u81ea\u9732\u8425/, replacement: 'ふたりソロキャンプ' },
+            { pattern: /^\u5730\u7f1a\u5c11\u5e74\u82b1\u5b50\u541b \u7b2c\u4e8c\u5b63 \u540e\u7bc7/, replacement: '\u5730\u7f1a\u5c11\u5e74\u82b1\u5b50\u541b' },
+            { pattern: /^\u66f4\u8863\u4eba\u5076\u5760\u5165\u7231\u6cb3 \u7b2c\u4e8c\u5b63/, replacement: '\u66f4\u8863\u4eba\u5076\u5760\u5165\u7231\u6cb3', forceFirstResult: true },
+            { pattern: /^\u574f\u5973\u5b69/, replacement: '\u4e0d\u826f\u5c11\u5973' },
+            { pattern: / \u7b2c[^\u5b63]*\u5b63/, replacement: '' },
+            { pattern: /^(\u6b4c\u624b|\u5168\u5458\u52a0\u901f\u4e2d)\d{4}$/, replacement: (match, showName) => {
+                const showMap = {
+                    '\u6b4c\u624b': '\u6211\u662f\u6b4c\u624b',
+                    '\u5168\u5458\u52a0\u901f\u4e2d': '\u5168\u5458\u52a0\u901f\u4e2d'
+                };
+                return showMap[showName] || showName;
+            }},
+            { pattern: /^\u5954\u8dd1\u5427(?! ?\u5144\u5f1f)/, replacement: '\u5954\u8dd1\u5427\u5144\u5f1f' },
+            { pattern: /^(.+?[^0-9])\d+$/, replacement: (match, baseName) => {
+                if (/^(\u6b4c\u624b|\u5168\u5458\u52a0\u901f\u4e2d)\d{4}$/.test(match)) {
+                    return match;
+                }
+                return baseName;
+            }},
+            { pattern: /^([^·]+)·(.*)$/, replacement: (match, part1, part2) => {
+                if (part2 && !/^(\u6162\u4eab\u5b63|\u7b2c.*\u5b63)/.test(part2)) {
+                    return part1 + part2;
+                }
+                return part1;
+            }}
+        ];
+        
+        let title = scItem.title;
+        let forceFirstResult = false;
+        let forceMovieType = false;
+        for (const rule of titleNormalizationRules) {
+            if (rule.pattern.test(title)) {
+                if (typeof rule.replacement === 'function') {
+                    title = title.replace(rule.pattern, rule.replacement);
+                } else {
+                    title = title.replace(rule.pattern, rule.replacement);
+                }
+                if (rule.forceFirstResult) {
+                    forceFirstResult = true;
+                }
+                if (rule.forceMovieType) {
+                    forceMovieType = true;
+                }
+                break;
+            }
+        }
+        
+        let year = null;
+        if (scItem.year) {
+            year = String(scItem.year);
+        } else if (scItem.card_subtitle) {
+            const yearMatch = scItem.card_subtitle.match(/(\d{4})/);
+            if (yearMatch) year = yearMatch[1];
+        }
+
+        let searchType = scItem.type;
+        
+        if (forceMovieType) {
+            searchType = "movie";
+        } else {
+            let detectedType = detectItemTypeFromContent(scItem);
+            
+            if (scItem.type === "multi") {
+                if (detectedType) {
+                    searchType = detectedType;
+                } else if (scItem.subtype && (scItem.subtype === "movie" || scItem.subtype === "tv")) {
+                    searchType = scItem.subtype;
+                } else {
+                    searchType = "multi";
+                }
+            }
+        }
+        
+        const tmdbDatas = await fetchTmdbDataForDouban(title, searchType);
+
+        if (tmdbDatas.length !== 0) {
+            
+            if (scItem.isMultiTypeTitle) {
+                const allMatches = selectMatches(tmdbDatas, title, year, { 
+                    returnArray: true, 
+                    doubanItem: scItem
+                });
+
+                return allMatches
+                    .filter(match => {
+                        return match.poster_path &&
+                               match.id &&
+                               (match.title || match.name) &&
+                               (match.title || match.name).trim().length > 0;
+                    })
+                    .map(match => ({
+                        id: match.id,
+                        type: "tmdb",
+                        title: match.title ?? match.name,
+                        description: match.overview,
+                        releaseDate: match.release_date ?? match.first_air_date,
+                        backdropPath: match.backdrop_path,
+                        posterPath: match.poster_path,
+                        rating: match.vote_average,
+                        mediaType: match.media_type,
+                        genreTitle: generateGenreTitleFromTmdb(match, scItem),
+                        originalDoubanTitle: scItem.title,
+                        originalDoubanYear: scItem.year,
+                        originalDoubanId: scItem.id
+                    }));
+            } else {
+                const bestMatch = forceFirstResult && tmdbDatas.length > 0 ? 
+                    tmdbDatas[0] : 
+                    selectMatches(tmdbDatas, title, year, { 
+                        doubanItem: scItem
+                    });
+                
+                if (bestMatch && bestMatch.poster_path && bestMatch.id && 
+                    (bestMatch.title || bestMatch.name) && 
+                    (bestMatch.title || bestMatch.name).trim().length > 0) {
+                    return {
+                        id: bestMatch.id,
+                        type: "tmdb",
+                        title: bestMatch.title ?? bestMatch.name,
+                        description: bestMatch.overview,
+                        releaseDate: bestMatch.release_date ?? bestMatch.first_air_date,
+                        backdropPath: bestMatch.backdrop_path,
+                        posterPath: bestMatch.poster_path,
+                        rating: bestMatch.vote_average,
+                        mediaType: bestMatch.media_type,
+                        genreTitle: generateGenreTitleFromTmdb(bestMatch, scItem),
+                        originalDoubanTitle: scItem.title,
+                        originalDoubanYear: scItem.year,
+                        originalDoubanId: scItem.id
+                    };
+                }
+            }
+        }
+        return null;
+    });
+
+    const results = await Promise.all(promises);
+    
+    const allItems = [];
+    for (const result of results) {
+        if (result) {
+            if (Array.isArray(result)) {
+                allItems.push(...result);
+            } else {
+                allItems.push(result);
+            }
+        }
+    }
+    
+    return allItems;
+}
+
+async function loadEnhancedDoubanList(params = {}) {
+    const url = params.url;
+    
+    if (url.includes("douban.com/doulist/")) {
+        return loadEnhancedDefaultList(params);
+    } 
+    else if (url.includes("douban.com/subject_collection/")) {
+        return loadEnhancedSubjectCollection(params);
+    } 
+    else if (url.includes("m.douban.com/doulist/")) {
+        const desktopUrl = url.replace("m.douban.com", "www.douban.com");
+        return loadEnhancedDefaultList({ ...params, url: desktopUrl });
+    }
+    else if (url.includes("douban.com/doubanapp/dispatch")) {
+        const parsedUrl = parseDoubanAppDispatchUrl(url);
+        return loadEnhancedDoubanList({ ...params, url: parsedUrl });
+    }
+    
+    return [];
+}
+
+async function loadEnhancedDefaultList(params = {}) {
+    const url = params.url;
+    const listId = url.match(/doulist\/(\d+)/)?.[1];
+    const page = params.page || 1;
+    const count = 25;
+    const start = (page - 1) * count;
+    const pageUrl = `https://www.douban.com/doulist/${listId}/?start=${start}&sort=seq&playable=0&sub_type=`;
+
+    const response = await Widget.http.get(pageUrl, {
+        headers: {
+            Referer: `https://movie.douban.com/explore`,
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        },
+    });
+
+    const docId = Widget.dom.parse(response.data);
+    const videoElementIds = Widget.dom.select(docId, ".doulist-item .title a");
+
+    let doubanItems = [];
+    for (const itemId of videoElementIds) {
+        const link = await Widget.dom.attr(itemId, "href");
+        const text = await Widget.dom.text(itemId);
+        const chineseTitle = text.trim().split(' ')[0];
+        if (chineseTitle) {
+            doubanItems.push({ title: chineseTitle, type: "multi" });
+        }
+    }
+
+    return await fetchImdbItemsForDouban(doubanItems);
+}
+
+async function loadEnhancedItemsFromApi(params = {}) {
+    const url = params.url;
+    const listId = params.url.match(/subject_collection\/(\w+)/)?.[1];
+    const response = await Widget.http.get(url, {
+        headers: {
+            Referer: `https://m.douban.com/subject_collection/${listId}/`,
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        },
+    });
+
+    const scItems = response.data.subject_collection_items;
+    return await fetchImdbItemsForDouban(scItems);
+}
+
+async function loadEnhancedSubjectCollection(params = {}) {
+    const listId = params.url.match(/subject_collection\/(\w+)/)?.[1];
+    const page = params.page || 1;
+    const count = 20;
+    const start = (page - 1) * count;
+    
+    let pageUrl = `https://m.douban.com/rexxar/api/v2/subject_collection/${listId}/items?start=${start}&count=${count}&updated_at&items_only=1&type_tag&for_mobile=1`;
+    if (params.type) {
+        pageUrl += `&type=${params.type}`;
+    }
+    
+    return await loadEnhancedItemsFromApi({ ...params, url: pageUrl });
+}
+
+//===============TMDB功能函数===============
+async function fetchTmdbData(api, params) {
+    const [data, genres] = await Promise.all([
+        Widget.tmdb.get(api, { params: params }),
+        fetchTmdbGenres()
+    ]);
+
+    return data.results
+        .filter((item) => {
+            return item.poster_path &&
+                   item.id &&
+                   (item.title || item.name) &&
+                   (item.title || item.name).trim().length > 0;
+        })
+        .map((item) => {
+            const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
+            const genreIds = item.genre_ids || [];
+            const genreTitle = getTmdbGenreTitles(genreIds, mediaType);
+
+            return {
+                id: item.id,
+                type: "tmdb",
+                title: item.title || item.name,
+                description: item.overview,
+                releaseDate: item.release_date || item.first_air_date,
+                backdropPath: item.backdrop_path,
+                posterPath: item.poster_path,
+                rating: item.vote_average,
+                mediaType: mediaType,
+                genreTitle: genreTitle
+            };
+        });
+}
 
 async function tmdbNowPlaying(params) {
     const type = params.type || 'movie';
@@ -383,13 +2078,42 @@ async function tmdbNowPlaying(params) {
     return await fetchTmdbData(api, params);
 }
 
-async function tmdbTrending(params) {
-  const timeWindow = params.time_window;
-  const api = `trending/all/${timeWindow}`;
-  delete params.time_window;
-  return await fetchTmdbData(api, params);
+async function loadTmdbTrendingData() {
+    const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json");
+    return response.data;
 }
 
+async function loadTodayGlobalMedia() {
+    const data = await loadTmdbTrendingData();
+    return data.today_global.map(item => ({
+        id: item.id.toString(),
+        type: "tmdb",
+        title: item.title,
+        genreTitle: item.genreTitle,
+        rating: item.rating,
+        description: item.overview,
+        releaseDate: item.release_date,
+        posterPath: item.poster_url,
+        backdropPath: item.title_backdrop,
+        mediaType: item.type,
+    }));
+}
+
+async function loadWeekGlobalMovies(params) {
+    const data = await loadTmdbTrendingData();
+    return data.week_global_all.map(item => ({
+        id: item.id.toString(),
+        type: "tmdb",
+        title: item.title,
+        genreTitle: item.genreTitle,
+        rating: item.rating,
+        description: item.overview,
+        releaseDate: item.release_date,
+        posterPath: item.poster_url,
+        backdropPath: item.title_backdrop,
+        mediaType: item.type,
+    }));
+}
 
 async function tmdbTopRated(params) {
     const type = params.type || 'movie';
@@ -451,38 +2175,33 @@ async function tmdbDiscoverByNetwork(params = {}) {
 }
 
 async function tmdbCompanies(params = {}) {
-    try {
-        const api = "discover/movie";
-        const beijingDate = getBeijingDate();
-        const withCompanies = String(params.with_companies || '').trim();
+    const api = "discover/movie";
+    const beijingDate = getBeijingDate();
+    const withCompanies = String(params.with_companies || '').trim();
 
-        const cleanParams = {
-            page: params.page || 1,
-            language: params.language || "zh-CN",
-            sort_by: params.sort_by || "primary_release_date.desc",
-            include_adult: false,
-            include_video: false
-        };
+    const cleanParams = {
+        page: params.page || 1,
+        language: params.language || "zh-CN",
+        sort_by: params.sort_by || "primary_release_date.desc",
+        include_adult: false,
+        include_video: false
+    };
 
-        if (withCompanies) {
-            cleanParams.with_companies = withCompanies;
-        }
-
-        if (params.air_status === 'released') {
-            cleanParams['primary_release_date.lte'] = beijingDate;
-        } else if (params.air_status === 'upcoming') {
-            cleanParams['primary_release_date.gte'] = beijingDate;
-        }
-
-        if (params.with_genres) {
-            cleanParams.with_genres = String(params.with_genres).trim();
-        }
-
-        return await fetchTmdbData(api, cleanParams);
-    } catch (error) {
-        console.error('公司数据加载失败:', error);
-        return [createErrorItem('companies', '数据加载失败', error)];
+    if (withCompanies) {
+        cleanParams.with_companies = withCompanies;
     }
+
+    if (params.air_status === 'released') {
+        cleanParams['primary_release_date.lte'] = beijingDate;
+    } else if (params.air_status === 'upcoming') {
+        cleanParams['primary_release_date.gte'] = beijingDate;
+    }
+
+    if (params.with_genres) {
+        cleanParams.with_genres = String(params.with_genres).trim();
+    }
+
+    return await fetchTmdbData(api, cleanParams);
 }
 
 //===============IMDB功能函数===============
