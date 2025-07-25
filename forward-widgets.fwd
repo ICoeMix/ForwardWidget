@@ -1,6 +1,6 @@
 {
-  "title": "Joy's Widgets",
-  "description": "A Collection of widgets created by Joy",
+  "title": "ICoeMix's Widgets",
+  "description": "A Collection of widgets created by ICoeMix",
   "icon": "https://assets.vvebo.vip/scripts/icon.png",
   "widgets": [
     {
@@ -9,8 +9,8 @@
       "description": "基于Forw​​ardWidget架构导入影视模块",
       "requiredVersion": "0.0.1",
       "version": "1.0.6",
-      "author": "Joy",
-      "url": "https://raw.githubusercontent.com/Ma98hao04hsin15/ForwardWidgets/refs/heads/main/widget/ForwardWidgets.js"
+      "author": "ICoeMix",
+      "url": "https://raw.githubusercontent.com/ICoeMix/ForwardWidget/refs/heads/main/Widget/ForwardWidgets.js"
     },
     {
       "id": "forward.imdb",
@@ -18,8 +18,8 @@
       "description": "IMDb 榜單與放映日曆工具+時間分類",
       "requiredVersion": "0.0.1",
       "version": "1.0.11",
-      "author": "Joy",
-      "url": "https://raw.githubusercontent.com/Ma98hao04hsin15/ForwardWidgets/refs/heads/main/widget/imdbtime.js"
+      "author": "ICoeMix",
+      "url": "https://raw.githubusercontent.com/ICoeMix/ForwardWidget/refs/heads/main/Widget/imdbtime.js"
     },
     {
       "id": "ImdbListOnly",
@@ -27,8 +27,8 @@
       "description": "基于Forw​​ardWidget架构載入 IMDB list 頁面",
       "requiredVersion": "0.0.1",
       "version": "1.0.0",
-      "author": "Joy",
-      "url": "https://raw.githubusercontent.com/Ma98hao04hsin15/ForwardWidgets/refs/heads/main/widget/IMDbList.js"
+      "author": "ICoeMix",
+      "url": "https://raw.githubusercontent.com/ICoeMix/ForwardWidget/refs/heads/main/Widget/IMDbList.js"
     },
     {
       "id": "forward.tmdb",
@@ -36,8 +36,8 @@
       "description": "获取 TMDB 的趋势榜单数据",
       "requiredVersion": "0.0.1",
       "version": "1.0.4",
-      "author": "Joy",
-      "url": "https://raw.githubusercontent.com/Ma98hao04hsin15/ForwardWidgets/refs/heads/main/widget/TMDBtrending.js"
+      "author": "ICoeMix",
+      "url": "https://raw.githubusercontent.com/ICoeMix/ForwardWidget/refs/heads/main/Widget/TMDBtrending.js"
     },
     {
       "id": "person.movie.tmdb",
@@ -45,8 +45,8 @@
       "description": "获取 TMDB 的人物影视榜单数据",
       "requiredVersion": "0.0.1",
       "version": "1.0.4",
-      "author": "Joy",
-      "url": "https://raw.githubusercontent.com/Ma98hao04hsin15/ForwardWidgets/refs/heads/main/widget/TMDBPerson.js"
+      "author": "ICoeMix",
+      "url": "https://raw.githubusercontent.com/ICoeMix/ForwardWidget/refs/heads/main/Widget/TMDBPerson.js"
     },
     {
       "id": "forward.tmdb",
@@ -54,8 +54,8 @@
       "description": "获取 TMDB 即將上映的榜单数据",
       "requiredVersion": "0.0.1",
       "version": "1.0.4",
-      "author": "Joy",
-      "url": "https://raw.githubusercontent.com/Ma98hao04hsin15/ForwardWidgets/refs/heads/main/widget/tmdbupcoming.js"
+      "author": "ICoeMix",
+      "url": "https://raw.githubusercontent.com/ICoeMix/ForwardWidget/refs/heads/main/Widget/tmdbupcoming.js"
     },
   ]
 }
