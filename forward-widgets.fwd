@@ -13,9 +13,18 @@
       "url": "https://raw.githubusercontent.com/ICoeMix/ForwardWidget/refs/heads/main/Widget/ForwardWidgets.js"
     },
     {
+      "id": "forward.tmbd",
+      "title": "TMBD",
+      "description": "出品平台",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.6",
+      "author": "ICoeMix",
+      "url": "https://raw.githubusercontent.com/ICoeMix/ForwardWidget/refs/heads/main/Widget/tmdbnetwork.js"
+    },
+    {
       "id": "forward.imdb",
       "title": "IMDb 工具集",
-      "description": "IMDb 榜單與放映日曆工具+時間分類",
+      "description": "IMDb 榜单与日历工具+时间分类",
       "requiredVersion": "0.0.1",
       "version": "1.0.11",
       "author": "ICoeMix",
